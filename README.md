@@ -5,7 +5,7 @@
 ## 添加方法
 
 ```bash
-cargo add --git "https://github.com/W9pi3cZ1/openfrp_sdk.git" openfrp-sdk
+cargo add --git "https://github.com/W9pi3cZ1/openfrp_sdk_rs.git" openfrp-sdk
 ```
 
 ## 示例
