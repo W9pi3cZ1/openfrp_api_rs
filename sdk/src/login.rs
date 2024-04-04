@@ -1,5 +1,6 @@
 use crate::{api_url::*, error::*, prelude::*};
-use hyper::{body::HttpBody, Body, HeaderMap, Method, Request};
+use http_body_util::{BodyExt, Full};
+use hyper::{HeaderMap, Method, Request};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -44,16 +45,19 @@ pub async fn login_oauth2(account: &Account, api_client: &mut Client) -> Result<
     req.headers_mut().unwrap().extend(headers);
 
     // 添加 Body
-    let req = req.body(Body::from(serde_json::to_string(account).unwrap()))?;
+    let req = req.body(Full::from(serde_json::to_string(account).unwrap()))?;
 
     // 用 Hyper Client 发送 Request
-    let mut res = client.request(req).await?;
-    let headers = res.headers();
+    let res = client.request(req).await?;
+
+    // 获取 Headers 和 Data
+    let headers = res.headers().clone();
+    let data = res.collect().await?.to_bytes();
 
     // 添加 Cookie
     api_client.cookies.extend_header(&headers).unwrap();
 
-    let json: Login = serde_json::from_slice(&res.data().await.unwrap()?.to_vec()).unwrap();
+    let json: Login = serde_json::from_slice(&data).unwrap();
 
     if !json.flag {
         return Err(Error::new(json.code.unwrap_or(-1), &json.msg));
@@ -79,16 +83,19 @@ pub async fn oauth2_callback(_login_res: Login, api_client: &mut Client) -> Resu
     req.headers_mut().unwrap().extend(headers);
 
     // 添加 Body
-    let req = req.body(Body::empty())?;
+    let req = req.body(Full::default())?;
 
     // 用 Hyper Client 发送 Request
-    let mut res = client.request(req).await?;
-    let headers = res.headers();
+    let res = client.request(req).await?;
+
+    // 获取 Headers 和 Data
+    let headers = res.headers().clone();
+    let data = res.collect().await?.to_bytes();
 
     // 添加 Cookie
     api_client.cookies.extend_header(&headers).unwrap();
 
-    let json: Login = serde_json::from_slice(&res.data().await.unwrap()?.to_vec()).unwrap();
+    let json: Login = serde_json::from_slice(&data).unwrap();
 
     if !json.flag {
         return Err(Error::new(json.code.unwrap_or(-1), &json.msg));
@@ -121,17 +128,18 @@ pub async fn login_by_code(code: String, api_client: &mut Client) -> Result<()> 
     req.headers_mut().unwrap().extend(headers);
 
     // 添加 Body
-    let req = req.body(Body::empty())?;
+    let req = req.body(Full::default())?;
 
     // 用 Hyper Client 发送 Request
-    let mut res = client.request(req).await?;
+    let res = client.request(req).await?;
+
+    // 获取 Headers 和 Data
     let headers = res.headers().clone();
+    let data = res.collect().await?.to_bytes();
 
     // 添加 Cookie
     api_client.cookies.extend_header(&headers).unwrap();
-    let data = res.data().await.unwrap()?;
-    // println!("data: {:#?}", String::from_utf8(data.to_vec()).unwrap());
-    let json: Login = serde_json::from_slice(&data.to_vec()).unwrap();
+    let json: Login = serde_json::from_slice(&data).unwrap();
 
     // Auth
     let auth: Auth;

@@ -1,10 +1,15 @@
-use hyper::{client::HttpConnector, Body};
-use hyper_tls::HttpsConnector;
 use super::*;
+use http_body_util::Full;
+use hyper::body::Bytes;
+use hyper_tls::HttpsConnector;
+use hyper_util::{
+    client::legacy::{connect::HttpConnector, Client as HyperClient},
+    rt::TokioExecutor,
+};
 
 #[derive(Clone, Debug)]
 pub struct Client {
-    pub client: hyper::Client<HttpsConnector<HttpConnector>, Body>,
+    pub client: HyperClient<HttpsConnector<HttpConnector>, Full<Bytes>>,
     pub cookies: Cookies,
     pub auth: OptionAuth,
 }
@@ -12,7 +17,7 @@ pub struct Client {
 impl Client {
     pub fn new() -> Self {
         Client {
-            client: hyper::Client::builder().build(HttpsConnector::new()),
+            client: HyperClient::builder(TokioExecutor::new()).build(HttpsConnector::new()),
             cookies: Cookies::new(),
             auth: OptionAuth(None),
         }

@@ -82,6 +82,17 @@ impl From<hyper::http::Error> for Error {
     }
 }
 
+impl From<hyper_util::client::legacy::Error> for Error {
+    fn from(err: hyper_util::client::legacy::Error) -> Error {
+        Self {
+            inner: Box::new(ErrorImpl {
+                code: -1,
+                msg: err.to_string(),
+                cause: Some(Box::new(err)),
+            })
+        }
+    }
+}
 
 impl Debug for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

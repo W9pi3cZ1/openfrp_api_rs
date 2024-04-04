@@ -1,6 +1,7 @@
 // use std::collections::HashMap;
 
-use hyper::{body::HttpBody, Body, HeaderMap, Method, Request};
+use http_body_util::{BodyExt, Full};
+use hyper::{HeaderMap, Method, Request};
 use serde::{Deserialize, Serialize};
 // use serde_json::Value;
 
@@ -68,16 +69,19 @@ pub async fn get_proxies(api_client: &mut Client) -> Result<Proxies> {
     req.headers_mut().unwrap().extend(headers);
 
     // 添加 Body
-    let req = req.body(Body::empty())?;
+    let req = req.body(Full::default())?;
 
     // 用 Hyper Client 发送 Request
-    let mut res = client.request(req).await?;
-    let headers = res.headers();
+    let res = client.request(req).await?;
+
+    // 获取 Headers 和 Data
+    let headers = res.headers().clone();
+    let data = res.collect().await?.to_bytes();
 
     // 添加 Cookie
     api_client.cookies.extend_header(&headers).unwrap();
 
-    let json: Proxies = serde_json::from_slice(&res.data().await.unwrap()?.to_vec()).unwrap();
+    let json: Proxies = serde_json::from_slice(&data).unwrap();
 
     if !json.flag {
         return Err(Error::new(-1, &json.msg));
