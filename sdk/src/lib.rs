@@ -1,15 +1,14 @@
-pub mod prelude;
 pub mod api_url;
 pub mod login;
-
-pub use login::*;
+pub mod prelude;
+pub mod user;
 
 pub mod error;
 
+pub use error::*;
+
 #[cfg(test)]
 mod tests {
-
-    #[test]
-    fn it_works() {
-    }
+    pub const EMAIL: &'static str = "xslimenb@xslimenb.eu.org";
+    pub const PASSWORD: &'static str = "123Tester_";
 }

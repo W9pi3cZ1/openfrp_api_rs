@@ -1,7 +1,23 @@
 use crate::{api_url::*, error::*, prelude::*};
-use hyper::{body::HttpBody, header::SET_COOKIE, Body, HeaderMap, Method, Request};
+use hyper::{body::HttpBody, Body, HeaderMap, Method, Request};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Account {
+    pub user: String,
+    pub password: String,
+}
+
+impl Account {
+    pub fn new<S: ToString>(user: S, password: S) -> Self {
+        Self {
+            user: user.to_string(),
+            password: password.to_string(),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Login {
@@ -35,10 +51,7 @@ pub async fn login_oauth2(account: &Account, api_client: &mut Client) -> Result<
     let headers = res.headers();
 
     // 添加 Cookie
-    headers
-        .get_all(SET_COOKIE)
-        .iter()
-        .for_each(|c| api_client.cookies.add_cookie(c.to_str().unwrap()).unwrap());
+    api_client.cookies.extend_header(&headers).unwrap();
 
     let json: Login = serde_json::from_slice(&res.data().await.unwrap()?.to_vec()).unwrap();
 
@@ -73,10 +86,7 @@ pub async fn oauth2_callback(_login_res: Login, api_client: &mut Client) -> Resu
     let headers = res.headers();
 
     // 添加 Cookie
-    headers
-        .get_all(SET_COOKIE)
-        .iter()
-        .for_each(|c| api_client.cookies.add_cookie(c.to_str().unwrap()).unwrap());
+    api_client.cookies.extend_header(&headers).unwrap();
 
     let json: Login = serde_json::from_slice(&res.data().await.unwrap()?.to_vec()).unwrap();
 
@@ -118,22 +128,19 @@ pub async fn login_by_code(code: String, api_client: &mut Client) -> Result<()> 
     let headers = res.headers().clone();
 
     // 添加 Cookie
-    headers
-        .get_all(SET_COOKIE)
-        .iter()
-        .for_each(|c| api_client.cookies.add_cookie(c.to_str().unwrap()).unwrap());
+    api_client.cookies.extend_header(&headers).unwrap();
     let data = res.data().await.unwrap()?;
     // println!("data: {:#?}", String::from_utf8(data.to_vec()).unwrap());
     let json: Login = serde_json::from_slice(&data.to_vec()).unwrap();
 
     // Auth
-    let mut auth = Auth::new();
+    let auth: Auth;
 
     if !json.flag {
         return Err(Error::new(json.code.unwrap_or(-1), &json.msg));
     } else {
         // 把 Authorization 写入 auth
-        auth.authorization = headers
+        let authorization = headers
             .get("Authorization")
             .unwrap()
             .to_str()
@@ -142,16 +149,20 @@ pub async fn login_by_code(code: String, api_client: &mut Client) -> Result<()> 
 
         match json.data {
             Some(data) => {
-                auth.session = data.as_str().unwrap().to_string();
+                let session = data.as_str().unwrap().to_string();
+                auth = Auth {
+                    session,
+                    authorization,
+                }
             }
             _ => todo!(),
         }
     }
-    api_client.auth = auth;
+    api_client.auth.set(auth);
     Ok(())
 }
 
-pub async fn login(account: &Account,api_client:&mut Client) -> Result<()>{
+pub async fn login(account: &Account, api_client: &mut Client) -> Result<()> {
     let login_oa2 = login_oauth2(account, api_client).await?;
     let code = oauth2_callback(login_oa2, api_client).await?;
     login_by_code(code, api_client).await?;
@@ -161,14 +172,15 @@ pub async fn login(account: &Account,api_client:&mut Client) -> Result<()>{
 #[cfg(test)]
 mod tests {
 
-    use super::*;
+    use crate::tests;
+    use crate::login::*;
 
     #[tokio::test]
     async fn test_login() -> Result<()> {
-        let account = Account::new("example@example.com", "password");
+        let account = Account::new(tests::EMAIL, tests::PASSWORD);
         let mut client = Client::new();
         login(&account, &mut client).await?;
-        println!("auth: {:#?}", client.auth);
+        println!("auth: {:#?}", client.auth.get()?);
         Ok(())
     }
 }

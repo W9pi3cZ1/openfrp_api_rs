@@ -22,7 +22,6 @@ impl Error {
     }
 }
 
-
 impl From<Cause> for Error {
     fn from(err: Cause) -> Self {
         Self {
