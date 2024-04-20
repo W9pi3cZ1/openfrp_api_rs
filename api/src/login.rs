@@ -1,13 +1,16 @@
 use crate::{api_url::*, error::*, prelude::*};
 use http_body_util::{BodyExt, Full};
-use hyper::{HeaderMap, Method, Request};
+use hyper::{Method, Request};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Account {
+    /// Account email/name 账户邮箱或名称
     pub user: String,
+
+    /// Account password 账户密码
     pub password: String,
 }
 
@@ -22,21 +25,27 @@ impl Account {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Login {
+
+    /// Request status 登录请求是否成功
     pub flag: bool,
+
+    /// Request message 登录请求返回信息
     pub msg: String,
+
+    /// Request data 登录请求返回数据
     pub data: Option<Value>,
+
+    /// Request status code 登录请求代码
     pub code: Option<i32>,
 }
 
-// 登录到 Natayark ID OAuth2
+/// Login Natayark ID OAuth2 登录到 Natayark ID OAuth2
 pub async fn login_oauth2(account: &Account, api_client: &mut Client) -> Result<Login> {
     // 创建 Headers
-    let mut headers = HeaderMap::new();
-    headers.insert("Content-Type", "application/json".parse()?);
-    headers.insert("Cookie", api_client.cookies.to_string().parse()?);
+    let headers = api_client.make_headers();
 
     // 克隆 API Client 中的 Hyper Client
-    let client = api_client.client.clone();
+    let client = api_client.get_client();
 
     // 创建对应 API 的 POST 请求
     let mut req = Request::builder().method(Method::POST).uri(OAUTH2_URL);
@@ -66,15 +75,13 @@ pub async fn login_oauth2(account: &Account, api_client: &mut Client) -> Result<
     Ok(json)
 }
 
-// 通过 Natayark ID 回调，获取 Code
+/// Get code by Natayark callback 通过 Natayark ID 回调，获取 Code
 pub async fn oauth2_callback(_login_res: Login, api_client: &mut Client) -> Result<String> {
     // 创建 Headers
-    let mut headers = HeaderMap::new();
-    headers.insert("Content-Type", "application/json".parse()?);
-    headers.insert("Cookie", api_client.cookies.to_string().parse()?);
+    let headers = api_client.make_headers();
 
     // 克隆 API Client 中的 Hyper Client
-    let client = api_client.client.clone();
+    let client = api_client.get_client();
 
     // 创建对应 API 的 POST 请求
     let mut req = Request::builder().method(Method::POST).uri(OAUTH2_CALLBACK);
@@ -109,14 +116,13 @@ pub async fn oauth2_callback(_login_res: Login, api_client: &mut Client) -> Resu
     }
 }
 
+/// Login openfrp by code 登录OpenFrp通过Code
 pub async fn login_by_code(code: String, api_client: &mut Client) -> Result<()> {
     // 创建 Headers
-    let mut headers = HeaderMap::new();
-    headers.insert("Content-Type", "application/json".parse()?);
-    headers.insert("Cookie", api_client.cookies.to_string().parse()?);
+    let headers = api_client.make_headers();
 
     // 克隆 API Client 中的 Hyper Client
-    let client = api_client.client.clone();
+    let client = api_client.get_client();
 
     // 创建对应 API 的 POST 请求
     let mut req =
@@ -166,10 +172,11 @@ pub async fn login_by_code(code: String, api_client: &mut Client) -> Result<()> 
             _ => todo!(),
         }
     }
-    api_client.auth.set(auth);
+    api_client.set_auth(auth);
     Ok(())
 }
 
+/// Login OpenFrp by account 直接通过账户登录OpenFrp
 pub async fn login(account: &Account, api_client: &mut Client) -> Result<()> {
     let login_oa2 = login_oauth2(account, api_client).await?;
     let code = oauth2_callback(login_oa2, api_client).await?;
@@ -188,7 +195,7 @@ mod tests {
         let account = Account::new(tests::EMAIL, tests::PASSWORD);
         let mut client = Client::new();
         login(&account, &mut client).await?;
-        println!("auth: {:#?}", client.auth.get()?);
+        println!("auth: {:#?}", client.get_auth()?);
         Ok(())
     }
 }

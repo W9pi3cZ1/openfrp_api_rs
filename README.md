@@ -1,11 +1,11 @@
-# OpenFrp Rust SDK
+# OpenFrp API Rust
 
-一个用[***Hyper***](https://hyper.rs),[***Rust***](https://www.rust-lang.org/)和[***Tokio***](https://tokio.rs)实现的第三方[***OpenFrp***](https://www.openfrp.net) OPENAPI的SDK。
+一个用[***Hyper***](https://hyper.rs),[***Rust***](https://www.rust-lang.org/)和[***Tokio***](https://tokio.rs)实现的第三方[***OpenFrp***](https://www.openfrp.net) OPENAPI。
 
 ## 添加方法
 
 ```bash
-cargo add --git "https://github.com/W9pi3cZ1/openfrp_sdk_rs.git" openfrp-sdk
+cargo add --git "https://github.com/W9pi3cZ1/openfrp_api_rs.git" openfrp-api
 ```
 
 ## 示例

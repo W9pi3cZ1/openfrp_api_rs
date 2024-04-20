@@ -14,6 +14,10 @@ impl Cookies {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.cookies.is_empty()
+    }
+
     pub fn add_cookie<S: ToString>(&mut self, cookie: S) -> Result<()> {
         self.cookies.push(Cookie::parse(cookie.to_string())?);
         Ok(())

@@ -1,5 +1,5 @@
 use http_body_util::{BodyExt, Full};
-use hyper::{HeaderMap, Method, Request};
+use hyper::{Method, Request};
 use serde::{Deserialize, Serialize};
 
 use crate::{api_url::GET_USER_INFO, prelude::*};
@@ -29,18 +29,15 @@ pub struct UserInfo {
     pub msg: String,
 }
 
-pub async fn get_info(api_client: &mut Client) -> Result<UserInfo> {
+pub async fn get_user_info(api_client: &mut Client) -> Result<UserInfo> {
     // 获取 API Client 中的 Auth
-    let auth = api_client.auth.clone().get()?;
+    let _ = api_client.get_auth()?;
 
     // 创建 Headers
-    let mut headers = HeaderMap::new();
-    headers.insert("Content-Type", "application/json".parse()?);
-    headers.insert("Cookie", api_client.cookies.to_string().parse()?);
-    headers.insert("Authorization", auth.authorization.parse()?);
+    let headers = api_client.make_headers();
 
     // 克隆 API Client 中的 Hyper Client
-    let client = api_client.client.clone();
+    let client = api_client.get_client();
 
     // 创建对应 API 的 POST 请求
     let mut req = Request::builder().method(Method::POST).uri(GET_USER_INFO);
@@ -82,7 +79,7 @@ mod tests {
         let account = Account::new(tests::EMAIL, tests::PASSWORD);
         let mut client = Client::new();
         login(&account, &mut client).await?;
-        let user_info = user::get_info(&mut client).await?;
+        let user_info = user::get_user_info(&mut client).await?;
         println!("user info: {:#?}", user_info.data.unwrap());
         Ok(())
     }

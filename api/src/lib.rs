@@ -2,6 +2,8 @@ pub mod api_url;
 pub mod login;
 pub mod prelude;
 pub mod user;
+pub mod info;
+pub mod proxy;
 
 pub mod error;
 

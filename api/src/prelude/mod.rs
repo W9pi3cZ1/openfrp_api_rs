@@ -6,3 +6,4 @@ pub use client::*;
 
 mod auth;
 pub use auth::*;
+use hyper::HeaderMap;

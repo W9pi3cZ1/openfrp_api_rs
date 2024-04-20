@@ -376,14 +376,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
 
 [[package]]
-name = "login"
-version = "0.1.0"
-dependencies = [
- "openfrp-sdk 0.0.3 (git+https://github.com/W9pi3cZ1/openfrp_sdk_rs.git)",
- "tokio",
-]
-
-[[package]]
 name = "memchr"
 version = "2.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -459,8 +451,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 
 [[package]]
-name = "openfrp-sdk"
-version = "0.0.3"
+name = "openfrp-api"
+version = "0.1.0"
 dependencies = [
  "cookie",
  "http-body-util",
@@ -469,21 +461,7 @@ dependencies = [
  "hyper-util",
  "serde",
  "serde_json",
- "tokio",
-]
-
-[[package]]
-name = "openfrp-sdk"
-version = "0.0.3"
-source = "git+https://github.com/W9pi3cZ1/openfrp_sdk_rs.git#98163137a09effc36e7e05675b2a9ac6f3fffb46"
-dependencies = [
- "cookie",
- "http-body-util",
- "hyper",
- "hyper-tls",
- "hyper-util",
- "serde",
- "serde_json",
+ "serde_repr",
  "tokio",
 ]
 
@@ -717,6 +695,17 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "serde_repr"
+version = "0.1.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c64451ba24fc7a6a2d60fc75dd9c83c90903b19028d4eff35e88fc1e86564e9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
